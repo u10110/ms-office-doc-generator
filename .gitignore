@@ -1,0 +1,12 @@
+# System / cache junk
+.cache/
+.npm/
+.ssh/
+.hermes/
+.bashrc
+.profile
+.python_history
+.wget-hsts
+node_modules/
+*.pyc
+__pycache__/
