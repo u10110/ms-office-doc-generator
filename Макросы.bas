@@ -26,10 +26,12 @@ Public Sub ScanTemplates()
     Set folder = fso.GetFolder(templatePath)
     
     Dim wdApp As Object
+    Dim wasOpen As Boolean
     On Error Resume Next
     Set wdApp = GetObject(, "Word.Application")
-    If wdApp Is Nothing Then Set wdApp = CreateObject("Word.Application")
+    wasOpen = (Err.Number = 0)
     On Error GoTo 0
+    If wdApp Is Nothing Then Set wdApp = CreateObject("Word.Application")
     
     If wdApp Is Nothing Then
         MsgBox "Не удалось подключиться к Microsoft Word." & vbCrLf & "Убедитесь, что Word установлен.", vbCritical
@@ -138,7 +140,7 @@ SkipFolder:
     Application.Calculation = xlCalculationAutomatic
     Application.EnableEvents = True
     
-    wdApp.Quit
+    If Not wasOpen Then wdApp.Quit
     Set wdApp = Nothing
     
     MsgBox "Реестр обновлён из шаблонов." & vbCrLf & "Заполните строки и нажмите «Сгенерировать документы».", vbInformation
@@ -167,10 +169,12 @@ Public Sub GenerateDocuments()
     If Dir(outputPath, vbDirectory) = "" Then MkDir outputPath
     
     Dim wdApp As Object
+    Dim wasOpen2 As Boolean
     On Error Resume Next
     Set wdApp = GetObject(, "Word.Application")
-    If wdApp Is Nothing Then Set wdApp = CreateObject("Word.Application")
+    wasOpen2 = (Err.Number = 0)
     On Error GoTo 0
+    If wdApp Is Nothing Then Set wdApp = CreateObject("Word.Application")
     
     If wdApp Is Nothing Then
         MsgBox "Не удалось подключиться к Microsoft Word!", vbCritical
@@ -212,8 +216,12 @@ Public Sub GenerateDocuments()
             ' Пропуск полностью пустых строк
             If Application.WorksheetFunction.CountA(ws.Range(ws.Cells(r, 1), ws.Cells(r, lCol))) = 0 Then GoTo NextRow
             
+            Dim sheetOutPath As String
+            sheetOutPath = outputPath & ws.Name & "\"
+            If Dir(sheetOutPath, vbDirectory) = "" Then MkDir sheetOutPath
+            
             Dim rowFolder As String
-            rowFolder = outputPath & ws.Name & "\Строка_" & Format(r, "000") & "\"
+            rowFolder = sheetOutPath & "Строка_" & Format(r, "000") & "\"
             If Dir(rowFolder, vbDirectory) = "" Then MkDir rowFolder
             
             Dim srcFolder As Object
@@ -258,7 +266,6 @@ Public Sub GenerateDocuments()
                         Loop
                     End With
                     
-                    doc.Save
                     doc.Close SaveChanges:=True
                     Set doc = Nothing
                 End If
@@ -271,7 +278,7 @@ NextWs:
     Application.ScreenUpdating = True
     Application.StatusBar = False
     
-    wdApp.Quit
+    If Not wasOpen2 Then wdApp.Quit
     Set wdApp = Nothing
     
     MsgBox "Генерация завершена!" & vbCrLf & "Документы сохранены в папке:" & vbCrLf & outputPath, vbInformation
